@@ -81,6 +81,8 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
   border-radius:8px; color:#e0e0e0; font-family:inherit; font-size:13px; outline:none;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:#ff4444; }
+.form-group input[type="date"] { color-scheme:dark; cursor:pointer; }
+.form-group input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1); cursor:pointer; }
 .form-group textarea { resize:vertical; min-height:80px; }
 .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
 
@@ -193,7 +195,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
       <input type="text" id="filter-search" placeholder="검색..." oninput="renderIdeas()">
     </div>
     <table class="data-table">
-      <thead><tr><th>제목</th><th>유형</th><th>카테고리</th><th>상태</th><th>담당자</th><th>예정일</th><th>관리</th></tr></thead>
+      <thead><tr><th>제목</th><th>유형</th><th>카테고리</th><th>상태</th><th>담당자</th><th>예정일</th><th>참고 링크</th><th>관리</th></tr></thead>
       <tbody id="ideas-table"></tbody>
     </table>
     <div id="ideas-empty" class="empty-state" style="display:none;">
@@ -284,7 +286,12 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
     </div>
     <div class="form-group">
       <label>담당자</label>
-      <input type="text" id="idea-assignee" placeholder="이름">
+      <select id="idea-assignee">
+        <option value="">선택</option>
+        <option value="김용지">김용지</option>
+        <option value="김민준">김민준</option>
+        <option value="이주완">이주완</option>
+      </select>
     </div>
     <div class="form-group">
       <label>업로드 예정일</label>
@@ -422,7 +429,8 @@ function closeModal(type) {
   document.getElementById('modal-' + type).classList.remove('active');
   // Clear form
   if (type === 'idea') {
-    ['idea-title','idea-assignee','idea-date','idea-memo','idea-ref'].forEach(id => document.getElementById(id).value = '');
+    ['idea-title','idea-date','idea-memo','idea-ref'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('idea-assignee').value = '';
     document.getElementById('idea-type').value = '릴스';
     document.getElementById('idea-category').value = '자동차 뉴스';
     document.getElementById('idea-status').value = '아이디어';
@@ -535,6 +543,7 @@ function renderIdeas() {
       <td>${statusHTML(i.status)}</td>
       <td>${i.assignee || '-'}</td>
       <td>${i.date || '-'}</td>
+      <td>${i.ref ? `<a href="${i.ref}" target="_blank" style="color:#ff4444;text-decoration:none;font-size:12px;">링크 보기</a>` : '-'}</td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="editIdea('${i.id}')">수정</button>
         <button class="btn btn-danger btn-sm" onclick="deleteIdea('${i.id}')">삭제</button>
