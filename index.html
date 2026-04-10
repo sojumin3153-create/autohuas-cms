@@ -82,8 +82,25 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
   border-radius:8px; color:#e0e0e0; font-family:inherit; font-size:13px; outline:none;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:#ff4444; }
-.form-group input[type="date"] { color-scheme:dark; cursor:pointer; }
-.form-group input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1); cursor:pointer; }
+/* ── Date Picker ── */
+.dp-day { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#ccc; border-radius:6px; cursor:pointer; transition:all .15s; }
+.dp-day:hover { background:#2a2a3a; }
+.dp-day.today { border:1px solid #ff4444; }
+.dp-day.selected { background:#ff4444; color:#fff; font-weight:700; }
+.dp-day.blank { cursor:default; }
+.dp-day.blank:hover { background:transparent; }
+
+/* ── Link Preview Tooltip ── */
+.link-preview { position:relative; display:inline-block; color:#ff4444; text-decoration:none; font-size:12px; cursor:pointer; }
+.link-preview:hover { text-decoration:underline; }
+.preview-popup { display:none; position:absolute; bottom:28px; left:50%; transform:translateX(-50%); width:300px; background:#1a1a25; border:1px solid #2a2a3a; border-radius:10px; overflow:hidden; z-index:400; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+.preview-popup.show { display:block; }
+.preview-popup img { width:100%; height:160px; object-fit:cover; background:#0a0a0f; }
+.preview-popup .pv-body { padding:10px 12px; }
+.preview-popup .pv-title { font-size:13px; font-weight:600; color:#fff; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.preview-popup .pv-desc { font-size:11px; color:#888; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.4; }
+.preview-popup .pv-url { padding:6px 12px; font-size:10px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-top:1px solid #2a2a3a; background:#0a0a0f; }
+.preview-popup .pv-loading { padding:30px; text-align:center; color:#666; font-size:12px; }
 .form-group textarea { resize:vertical; min-height:80px; }
 .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
 
@@ -296,7 +313,17 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
     </div>
     <div class="form-group">
       <label>업로드 예정일</label>
-      <input type="date" id="idea-date" onclick="this.showPicker()">
+      <div style="position:relative;">
+        <input type="text" id="idea-date" placeholder="날짜를 선택하세요" readonly onclick="toggleDP()" style="cursor:pointer;">
+        <div id="date-picker" style="display:none;position:absolute;top:44px;left:0;background:#1a1a25;border:1px solid #2a2a3a;border-radius:12px;padding:14px;z-index:300;width:290px;">
+          <div id="dp-header" style="text-align:center;margin-bottom:10px;font-size:15px;font-weight:600;color:#fff;"></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;">
+            <div style="font-size:11px;color:#666;padding:4px;">일</div><div style="font-size:11px;color:#666;padding:4px;">월</div><div style="font-size:11px;color:#666;padding:4px;">화</div><div style="font-size:11px;color:#666;padding:4px;">수</div><div style="font-size:11px;color:#666;padding:4px;">목</div><div style="font-size:11px;color:#666;padding:4px;">금</div><div style="font-size:11px;color:#666;padding:4px;">토</div>
+          </div>
+          <div id="dp-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;justify-items:center;"></div>
+          <div style="text-align:center;margin-top:8px;font-size:10px;color:#555;">스크롤로 월 이동</div>
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <label>메모</label>
@@ -399,18 +426,26 @@ function initFirebaseListeners() {
 // ══════════════════════════════════════
 //  Navigation
 // ══════════════════════════════════════
+function switchPage(pageName) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+  if (navItem) navItem.classList.add('active');
+  document.getElementById('page-' + pageName).classList.add('active');
+  localStorage.setItem('autohuas-page', pageName);
+  if (pageName === 'dashboard') renderDashboard();
+  if (pageName === 'ideas') renderIdeas();
+  if (pageName === 'archive') renderArchive();
+  if (pageName === 'calendar') renderCalendar();
+}
+
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    item.classList.add('active');
-    document.getElementById('page-' + item.dataset.page).classList.add('active');
-    if (item.dataset.page === 'dashboard') renderDashboard();
-    if (item.dataset.page === 'ideas') renderIdeas();
-    if (item.dataset.page === 'archive') renderArchive();
-    if (item.dataset.page === 'calendar') renderCalendar();
-  });
+  item.addEventListener('click', () => switchPage(item.dataset.page));
 });
+
+// Restore last page on load
+const savedPage = localStorage.getItem('autohuas-page');
+if (savedPage && savedPage !== 'dashboard') switchPage(savedPage);
 
 // ══════════════════════════════════════
 //  Modal
@@ -544,7 +579,7 @@ function renderIdeas() {
       <td>${statusHTML(i.status)}</td>
       <td>${i.assignee || '-'}</td>
       <td>${i.date || '-'}</td>
-      <td>${i.ref ? `<a href="${i.ref}" target="_blank" style="color:#ff4444;text-decoration:none;font-size:12px;">링크 보기</a>` : '-'}</td>
+      <td>${i.ref ? `<a class="link-preview" href="${i.ref}" target="_blank" onmouseenter="showLinkPreview(this,'${i.ref.replace(/'/g,"\\'")}')" onmouseleave="hideLinkPreview(this)">링크 보기<div class="preview-popup"><div class="pv-loading">로딩중...</div></div></a>` : '-'}</td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="editIdea('${i.id}')">수정</button>
         <button class="btn btn-danger btn-sm" onclick="deleteIdea('${i.id}')">삭제</button>
@@ -747,6 +782,131 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.classList.remove('active');
     }
   });
+});
+
+
+// ══════════════════════════════════════
+//  Date Picker (scroll to change month)
+// ══════════════════════════════════════
+let dpY, dpM;
+
+function toggleDP() {
+  const dp = document.getElementById('date-picker');
+  if (dp.style.display === 'none') {
+    const v = document.getElementById('idea-date').value;
+    if (v) { const p = v.split('-'); dpY = +p[0]; dpM = +p[1]; }
+    else { const n = new Date(); dpY = n.getFullYear(); dpM = n.getMonth()+1; }
+    renderDP();
+    dp.style.display = 'block';
+  } else {
+    dp.style.display = 'none';
+  }
+}
+
+function renderDP() {
+  document.getElementById('dp-header').textContent = `${dpY}년 ${dpM}월`;
+  const grid = document.getElementById('dp-grid');
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const sel = document.getElementById('idea-date').value;
+  const firstDay = new Date(dpY, dpM-1, 1).getDay();
+  const lastDate = new Date(dpY, dpM, 0).getDate();
+  let h = '';
+  for (let i=0; i<firstDay; i++) h += '<div class="dp-day blank"></div>';
+  for (let d=1; d<=lastDate; d++) {
+    const ds = `${dpY}-${String(dpM).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls = ds===sel ? 'dp-day selected' : ds===todayStr ? 'dp-day today' : 'dp-day';
+    h += `<div class="${cls}" onclick="pickDate('${ds}')">${d}</div>`;
+  }
+  grid.innerHTML = h;
+}
+
+function pickDate(ds) {
+  document.getElementById('idea-date').value = ds;
+  document.getElementById('date-picker').style.display = 'none';
+}
+
+// Scroll wheel → month navigation
+document.getElementById('date-picker').addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.deltaY < 0) { dpM--; if (dpM<1){dpM=12;dpY--;} }
+  else { dpM++; if (dpM>12){dpM=1;dpY++;} }
+  if (dpY<2026) {dpY=2026;dpM=1;}
+  if (dpY>2030) {dpY=2030;dpM=12;}
+  renderDP();
+}, {passive:false});
+
+// Close on outside click
+document.addEventListener('click', e => {
+  const dp = document.getElementById('date-picker');
+  const input = document.getElementById('idea-date');
+  if (dp.style.display==='block' && !dp.contains(e.target) && e.target!==input) dp.style.display='none';
+});
+
+// ══════════════════════════════════════
+//  Link Preview (OG metadata)
+// ══════════════════════════════════════
+const previewCache = {};
+
+function showLinkPreview(el, url) {
+  const popup = el.querySelector('.preview-popup');
+  popup.classList.add('show');
+
+  if (previewCache[url]) {
+    renderPreview(popup, previewCache[url], url);
+    return;
+  }
+
+  fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`)
+    .then(r => r.json())
+    .then(data => {
+      const info = {
+        title: data.data?.title || '',
+        description: data.data?.description || '',
+        image: data.data?.image?.url || data.data?.logo?.url || ''
+      };
+      previewCache[url] = info;
+      renderPreview(popup, info, url);
+    })
+    .catch(() => {
+      const info = { title: url, description: '', image: '' };
+      previewCache[url] = info;
+      renderPreview(popup, info, url);
+    });
+}
+
+function renderPreview(popup, info, url) {
+  popup.innerHTML = `
+    ${info.image ? `<img src="${info.image}" alt="" onerror="this.style.display='none'">` : ''}
+    <div class="pv-body">
+      <div class="pv-title">${info.title || url}</div>
+      ${info.description ? `<div class="pv-desc">${info.description}</div>` : ''}
+    </div>
+    <div class="pv-url">${url}</div>
+  `;
+}
+
+function hideLinkPreview(el) {
+  const popup = el.querySelector('.preview-popup');
+  popup.classList.remove('show');
+}
+
+// Close date picker when clicking outside
+document.addEventListener('click', e => {
+  const dp = document.getElementById('date-picker');
+  const input = document.getElementById('idea-date');
+  if (dp && dp.style.display === 'block' && !dp.contains(e.target) && e.target !== input) {
+    dp.style.display = 'none';
+  }
+});
+
+// Close modal on ESC key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
+      overlay.classList.remove('active');
+    });
+  }
 });
 
 // Export/Import
