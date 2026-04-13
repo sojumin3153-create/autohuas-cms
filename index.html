@@ -133,6 +133,26 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
 .archive-card .card-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .archive-card .card-date { font-size:11px; color:#666; }
 .archive-card .card-memo { font-size:12px; color:#888; margin-top:8px; line-height:1.5; }
+.archive-card .card-files { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.archive-card .file-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:#0d0d15; border:1px solid #1e1e2e; border-radius:6px; font-size:12px; color:#ccc; text-decoration:none; transition:all .15s; }
+.archive-card .file-item:hover { border-color:#ff4444; color:#fff; }
+.archive-card .file-item .f-icon { font-size:14px; }
+.archive-card .file-item .f-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.archive-card .file-item .f-size { color:#666; font-size:11px; }
+
+/* File upload area in modal */
+.file-upload-area { border:1.5px dashed #2a2a3a; border-radius:8px; padding:18px; text-align:center; cursor:pointer; transition:all .15s; background:#0d0d15; }
+.file-upload-area:hover { border-color:#ff4444; background:#14141e; }
+.file-upload-area.dragover { border-color:#ff4444; background:#1a1a25; }
+.file-upload-area .fu-icon { font-size:24px; color:#555; margin-bottom:6px; }
+.file-upload-area .fu-text { font-size:12px; color:#888; }
+.file-upload-area .fu-hint { font-size:11px; color:#555; margin-top:4px; }
+.file-list { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.file-list .fl-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:#0d0d15; border:1px solid #1e1e2e; border-radius:6px; font-size:12px; }
+.file-list .fl-item .fl-name { flex:1; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-list .fl-item .fl-size { color:#666; font-size:11px; }
+.file-list .fl-item .fl-remove { background:none; border:none; color:#ff6666; cursor:pointer; font-size:16px; padding:0 4px; }
+.file-list .fl-item .fl-remove:hover { color:#ff4444; }
 .card-actions { display:flex; gap:6px; margin-top:12px; }
 
 /* ── Empty State ── */
@@ -148,9 +168,53 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
   .main { margin-left:60px; padding:16px; }
   .cal-day { min-height:60px; }
 }
+
+/* Login Screen */
+#login-screen { position:fixed; inset:0; background:#0a0a10; display:flex; align-items:center; justify-content:center; z-index:9999; }
+#login-screen.hidden { display:none; }
+.login-box { width:360px; padding:40px 32px; background:#111118; border:1px solid #1e1e2e; border-radius:16px; text-align:center; }
+.login-box img { width:140px; margin-bottom:18px; }
+.login-box h3 { font-size:14px; color:#888; font-weight:500; margin-bottom:24px; }
+.login-box input { width:100%; padding:12px 14px; background:#1a1a25; border:1px solid #2a2a3a; border-radius:8px; color:#fff; font-size:14px; margin-bottom:10px; box-sizing:border-box; }
+.login-box input:focus { outline:none; border-color:#ff4444; }
+.login-box button { width:100%; padding:12px; background:#ff4444; border:none; border-radius:8px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; }
+.login-box button:hover { background:#ff5555; }
+.login-box .err { color:#ff6666; font-size:12px; margin-top:12px; min-height:16px; }
+.pw-wrap { position:relative; }
+.pw-wrap input { padding-right:42px; }
+.pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); margin-top:-5px; cursor:pointer; user-select:none; opacity:.55; display:flex; align-items:center; justify-content:center; width:20px; height:20px; color:#ccc; }
+.pw-toggle:hover { opacity:1; }
+.pw-toggle svg { width:20px; height:20px; display:block; }
+.login-options { display:flex; gap:14px; justify-content:flex-start; margin:4px 2px 8px; font-size:12px; color:#888; }
+.login-options label { display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none; }
+.login-options input[type=checkbox] { width:13px; height:13px; accent-color:#ff4444; cursor:pointer; margin:0; }
+.login-options label:hover span { color:#ccc; }
+#logout-btn { position:fixed; top:16px; right:20px; padding:6px 14px; background:#1a1a25; border:1px solid #2a2a3a; border-radius:6px; color:#888; font-size:12px; cursor:pointer; z-index:200; }
+#logout-btn:hover { color:#ff4444; border-color:#ff4444; }
 </style>
 </head>
 <body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <img src="logo.png" alt="AUTOHAUS">
+    <h3>Content Management</h3>
+    <input type="text" id="login-email" placeholder="아이디" autocomplete="username">
+    <div class="pw-wrap">
+      <input type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password">
+      <span class="pw-toggle" onclick="togglePw()" id="pw-toggle-icon"></span>
+    </div>
+    <div class="login-options">
+      <label><input type="checkbox" id="save-id"> <span>아이디 저장</span></label>
+      <label><input type="checkbox" id="auto-login"> <span>자동 로그인</span></label>
+    </div>
+    <button onclick="doLogin()">로그인</button>
+    <div class="err" id="login-err"></div>
+  </div>
+</div>
+
+<button id="logout-btn" onclick="doLogout()" style="display:none;">로그아웃</button>
 
 <!-- Sidebar -->
 <div class="sidebar">
@@ -350,8 +414,18 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
       <input type="text" id="archive-title" placeholder="예: 테슬라 모델Y 가격 인상 기사">
     </div>
     <div class="form-group">
-      <label>URL *</label>
-      <input type="text" id="archive-url" placeholder="https://...">
+      <label>URL</label>
+      <input type="text" id="archive-url" placeholder="https://... (선택)">
+    </div>
+    <div class="form-group">
+      <label>파일 첨부</label>
+      <div class="file-upload-area" id="file-upload-area" onclick="document.getElementById('archive-file-input').click()">
+        <div class="fu-icon">📎</div>
+        <div class="fu-text">클릭하거나 파일을 여기로 드래그</div>
+        <div class="fu-hint">최대 3MB / 파일 · 여러 개 첨부 가능</div>
+      </div>
+      <input type="file" id="archive-file-input" multiple style="display:none;" onchange="handleFileSelect(event)">
+      <div class="file-list" id="archive-file-list"></div>
     </div>
     <div class="form-group">
       <label>카테고리</label>
@@ -378,6 +452,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#e0e0e0;
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 // ══════════════════════════════════════
 //  Firebase Setup
@@ -393,6 +468,111 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// ══════════════════════════════════════
+//  Auth
+// ══════════════════════════════════════
+let _authInited = false;
+const LOGIN_DOMAIN = '@autohaus.local'; // 내부 전용 더미 도메인
+const EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><line x1="4" y1="20" x2="20" y2="4"/></svg>';
+function togglePw() {
+  const inp = document.getElementById('login-pw');
+  const icon = document.getElementById('pw-toggle-icon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.innerHTML = EYE_OFF; }
+  else { inp.type = 'password'; icon.innerHTML = EYE_OPEN; }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const icon = document.getElementById('pw-toggle-icon');
+  if (icon) icon.innerHTML = EYE_OPEN;
+  restoreLoginPrefs();
+});
+function doLogin() {
+  const rawId = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-err');
+  const saveId = document.getElementById('save-id').checked;
+  const autoLogin = document.getElementById('auto-login').checked;
+  err.textContent = '';
+  if (!rawId || !pw) { err.textContent = '아이디와 비밀번호를 입력하세요.'; return; }
+  // 사용자가 @를 포함해 입력하지 않도록, 내부적으로 도메인을 붙여 이메일 형식으로 변환
+  const id = rawId.includes('@') ? rawId : rawId + LOGIN_DOMAIN;
+  auth.signInWithEmailAndPassword(id, pw).then(() => {
+    // 로그인 성공 시 저장 옵션 처리
+    if (saveId) localStorage.setItem('autohuas-saved-id', rawId);
+    else localStorage.removeItem('autohuas-saved-id');
+    if (autoLogin) {
+      localStorage.setItem('autohuas-saved-pw', pw);
+      localStorage.setItem('autohuas-auto-login', '1');
+    } else {
+      localStorage.removeItem('autohuas-saved-pw');
+      localStorage.removeItem('autohuas-auto-login');
+    }
+  }).catch(e => {
+    const map = {
+      'auth/invalid-email': '아이디 형식이 올바르지 않습니다.',
+      'auth/user-not-found': '등록되지 않은 계정입니다.',
+      'auth/wrong-password': '비밀번호가 일치하지 않습니다.',
+      'auth/invalid-credential': '아이디 또는 비밀번호가 올바르지 않습니다.',
+      'auth/too-many-requests': '로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도하세요.'
+    };
+    err.textContent = map[e.code] || ('로그인 실패: ' + e.message);
+    // 자동 로그인 실패 시 저장된 비밀번호 제거 (비밀번호 변경된 경우 방지)
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      localStorage.removeItem('autohuas-saved-pw');
+      localStorage.removeItem('autohuas-auto-login');
+      document.getElementById('auto-login').checked = false;
+    }
+  });
+}
+function doLogout() {
+  auth.signOut();
+  localStorage.removeItem('autohuas-page');
+  // 로그아웃 시 자동 로그인은 해제 (아이디는 유지)
+  localStorage.removeItem('autohuas-saved-pw');
+  localStorage.removeItem('autohuas-auto-login');
+  location.reload();
+}
+// 저장된 아이디/자동 로그인 복원
+function restoreLoginPrefs() {
+  const savedId = localStorage.getItem('autohuas-saved-id');
+  const savedPw = localStorage.getItem('autohuas-saved-pw');
+  const autoLogin = localStorage.getItem('autohuas-auto-login') === '1';
+  if (savedId) {
+    document.getElementById('login-email').value = savedId;
+    document.getElementById('save-id').checked = true;
+  }
+  if (autoLogin && savedPw) {
+    document.getElementById('login-pw').value = savedPw;
+    document.getElementById('auto-login').checked = true;
+    document.getElementById('save-id').checked = true;
+    // Firebase 세션이 이미 있으면 onAuthStateChanged가 처리하므로, 없을 때만 자동 실행
+    setTimeout(() => { if (!auth.currentUser) doLogin(); }, 400);
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('login-screen').classList.contains('hidden')) {
+    doLogin();
+  }
+});
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('logout-btn').style.display = 'block';
+    if (!_authInited) {
+      _authInited = true;
+      initFirebaseListeners();
+      const savedPage = localStorage.getItem('autohuas-page');
+      if (savedPage && savedPage !== 'dashboard') switchPage(savedPage);
+    }
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('logout-btn').style.display = 'none';
+  }
+});
 
 // ══════════════════════════════════════
 //  Data Layer (Firebase Realtime DB)
@@ -443,9 +623,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => switchPage(item.dataset.page));
 });
 
-// Restore last page on load
-const savedPage = localStorage.getItem('autohuas-page');
-if (savedPage && savedPage !== 'dashboard') switchPage(savedPage);
+// Page restore happens after auth (see onAuthStateChanged)
 
 // ══════════════════════════════════════
 //  Modal
@@ -459,6 +637,8 @@ function openModal(type) {
   if (type === 'archive') {
     document.getElementById('archive-modal-title').textContent = '레퍼런스 추가';
     document.getElementById('archive-edit-id').value = '';
+    _archiveFiles = [];
+    renderArchiveFileList();
   }
 }
 function closeModal(type) {
@@ -474,6 +654,8 @@ function closeModal(type) {
   if (type === 'archive') {
     ['archive-title','archive-url','archive-memo'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('archive-category').value = '자동차 뉴스';
+    _archiveFiles = [];
+    renderArchiveFileList();
   }
 }
 
@@ -591,10 +773,94 @@ function renderIdeas() {
 // ══════════════════════════════════════
 //  Archive CRUD
 // ══════════════════════════════════════
+// ══════════════════════════════════════
+//  Archive File Upload (base64 in Realtime DB)
+// ══════════════════════════════════════
+const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB per file
+let _archiveFiles = []; // 현재 모달에서 편집 중인 파일 배열 [{name, size, type, data}]
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
+  return (bytes/1024/1024).toFixed(1) + 'MB';
+}
+function fileIcon(type) {
+  if (type.startsWith('image/')) return '🖼️';
+  if (type.startsWith('video/')) return '🎬';
+  if (type.startsWith('audio/')) return '🎵';
+  if (type.includes('pdf')) return '📄';
+  if (type.includes('zip') || type.includes('rar')) return '🗜️';
+  if (type.includes('word') || type.includes('document')) return '📝';
+  if (type.includes('sheet') || type.includes('excel')) return '📊';
+  return '📎';
+}
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  addFilesToArchive(files);
+  e.target.value = ''; // 같은 파일 재선택 가능하도록 초기화
+}
+function addFilesToArchive(files) {
+  files.forEach(file => {
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`"${file.name}" 파일이 3MB를 초과합니다. (${formatFileSize(file.size)})`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      _archiveFiles.push({
+        name: file.name,
+        size: file.size,
+        type: file.type || 'application/octet-stream',
+        data: reader.result // data:... base64
+      });
+      renderArchiveFileList();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function removeArchiveFile(idx) {
+  _archiveFiles.splice(idx, 1);
+  renderArchiveFileList();
+}
+function renderArchiveFileList() {
+  const list = document.getElementById('archive-file-list');
+  if (_archiveFiles.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = _archiveFiles.map((f, i) => `
+    <div class="fl-item">
+      <span>${fileIcon(f.type)}</span>
+      <span class="fl-name">${f.name}</span>
+      <span class="fl-size">${formatFileSize(f.size)}</span>
+      <button type="button" class="fl-remove" onclick="removeArchiveFile(${i})" title="제거">×</button>
+    </div>
+  `).join('');
+}
+function downloadArchiveFile(archiveId, fileIdx) {
+  const item = getData('archives').find(a => a.id === archiveId);
+  if (!item || !item.files || !item.files[fileIdx]) return;
+  const f = item.files[fileIdx];
+  const a = document.createElement('a');
+  a.href = f.data;
+  a.download = f.name;
+  a.click();
+}
+
+// 드래그 앤 드롭
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('file-upload-area');
+  if (!area) return;
+  ['dragenter','dragover'].forEach(ev => area.addEventListener(ev, e => { e.preventDefault(); area.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev => area.addEventListener(ev, e => { e.preventDefault(); area.classList.remove('dragover'); }));
+  area.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer.files);
+    addFilesToArchive(files);
+  });
+});
+
 function saveArchive() {
   const title = document.getElementById('archive-title').value.trim();
   const url = document.getElementById('archive-url').value.trim();
-  if (!title || !url) { alert('제목과 URL을 입력해주세요!'); return; }
+  if (!title) { alert('제목을 입력해주세요!'); return; }
+  if (!url && _archiveFiles.length === 0) { alert('URL 또는 파일 중 하나는 입력/첨부해주세요!'); return; }
 
   const archives = getData('archives');
   const editId = document.getElementById('archive-edit-id').value;
@@ -605,6 +871,7 @@ function saveArchive() {
     url,
     category: document.getElementById('archive-category').value,
     memo: document.getElementById('archive-memo').value.trim(),
+    files: _archiveFiles.slice(), // 파일 배열 복사
     createdAt: editId ? (archives.find(a => a.id === editId)?.createdAt || new Date().toISOString()) : new Date().toISOString()
   };
 
@@ -628,9 +895,11 @@ function editArchive(id) {
   document.getElementById('archive-modal-title').textContent = '레퍼런스 수정';
   document.getElementById('archive-edit-id').value = id;
   document.getElementById('archive-title').value = item.title;
-  document.getElementById('archive-url').value = item.url;
+  document.getElementById('archive-url').value = item.url || '';
   document.getElementById('archive-category').value = item.category;
   document.getElementById('archive-memo').value = item.memo || '';
+  _archiveFiles = item.files ? item.files.slice() : [];
+  renderArchiveFileList();
   document.getElementById('modal-archive').classList.add('active');
 }
 
@@ -771,9 +1040,8 @@ function renderDashboard() {
 }
 
 // ══════════════════════════════════════
-//  Init
+//  Init (listeners start after login — see onAuthStateChanged)
 // ══════════════════════════════════════
-initFirebaseListeners();
 
 // Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
